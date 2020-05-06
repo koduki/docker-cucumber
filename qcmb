@@ -1,0 +1,44 @@
+#!ruby
+
+# params
+docker_image = "koduki/cucumber"
+output_dir = "report"
+
+# check command
+if ARGV[0] == 'clean'
+    require 'fileutils'
+    FileUtils.rm_r(output_dir) if File.exist? output_dir
+    exit 0
+elsif ARGV[0] == 'help'
+    msg = <<EOS
+Usage: qcmb [help|clean] [options]
+Examples:
+    qcmb help
+    qcmb clean
+    qcmb --Xheadless=false --format html --out report/index.html 
+Options:
+    --Xheadless[true|false] It should be 'false', if no-headless is required for debug.
+    -h, --help              show cucumber options
+    --{cucumber options}    set cucumber options
+EOS
+    puts msg
+    exit 0
+end
+
+# parse arguments
+cucumber_args = ARGV.find_all{|x| !(x =~ /^--X/)}
+my_args=ARGV.find_all{|x| x =~ /^--X/}.map{|x| x.sub("--X", "").split('=')}.to_h
+
+# build docker command
+cmd = 'docker run -it '
+cmd += '-e DISPLAY="${LOCAL_DISPLAY}" '
+cmd += '-e CHROME_NO_HEADLESS=true ' if my_args["headless"] == 'false'
+cmd += '-v `pwd`:/usr/src/app ' 
+cmd += docker_image 
+cmd += ' cucumber ' 
+cmd += cucumber_args.join(" ")
+
+# exec
+GET_IP='LOCAL_DISPLAY=$(ifconfig en0 | grep inet | awk \'$1=="inet" {print $2}\'):"0";'
+MK_DIR="mkdir -p #{output_dir};"
+system(MK_DIR + GET_IP + cmd)
