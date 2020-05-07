@@ -30,7 +30,7 @@ cucumber_args = ARGV.find_all{|x| !(x =~ /^--X/)}
 my_args=ARGV.find_all{|x| x =~ /^--X/}.map{|x| x.sub("--X", "").split('=')}.to_h
 
 # build docker command
-cmd = 'docker run -it '
+cmd = 'docker run -it --rm '
 cmd += '-e DISPLAY="${LOCAL_DISPLAY}" '
 cmd += '-e CHROME_NO_HEADLESS=true ' if my_args["headless"] == 'false'
 cmd += '-v `pwd`:/usr/src/app ' 
